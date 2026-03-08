@@ -83,6 +83,36 @@ void RguiMenu::setSelectedIndex(int idx) {
     }
 }
 
+void RguiMenu::setSelectionState(int idx, int scrollOffset) {
+    if (m_items.empty()) {
+        m_selected = 0;
+        m_scroll_offset = 0;
+        m_dirty = true;
+        return;
+    }
+
+    m_selected = std::max(0, std::min(idx, (int)m_items.size() - 1));
+    int visible = getVisibleRows();
+    int maxScroll = std::max(0, (int)m_items.size() - visible);
+    m_scroll_offset = std::max(0, std::min(scrollOffset, maxScroll));
+
+    if (m_selected < m_scroll_offset) {
+        m_scroll_offset = m_selected;
+    } else if (m_selected >= m_scroll_offset + visible) {
+        m_scroll_offset = std::max(0, m_selected - visible + 1);
+    }
+
+    m_dirty = true;
+}
+
+int RguiMenu::getScrollOffset() const {
+    return m_scroll_offset;
+}
+
+int RguiMenu::getVisibleRowCount() const {
+    return getVisibleRows();
+}
+
 int RguiMenu::getVisibleRows() const {
     float h = m_renderer->getSize().y;
     int rows = (int)((h - TITLE_HEIGHT - MARGIN * 2) / ROW_HEIGHT);

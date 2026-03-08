@@ -113,13 +113,14 @@ RguiMain::RguiMain(UiMain *ui)
 
     m_last_browse_path = loadBrowsePath(m_renderer->getIo());
     m_rgui_font = loadRguiFont(m_ui);
+    std::string root_browse_path = getDefaultBrowsePath(m_renderer->getIo());
 
     // create sub-menus
     Font *font = m_rgui_font ? m_rgui_font : m_ui->getSkin()->getFont();
     m_main_menu = new RguiMenu(m_renderer, font, "FBNeo Vita", {});
     m_settings_menu = new RguiMenu(m_renderer, font, "Settings", {});
-    m_filebrowser = new RguiFileBrowser(m_renderer, font, m_last_browse_path,
-                                         m_ui->getConfig()->getCoreSupportedExt());
+    m_filebrowser = new RguiFileBrowser(m_renderer, font, root_browse_path,
+                                        m_last_browse_path, m_ui->getConfig()->getCoreSupportedExt());
     m_state_menu = new RguiStateMenu(m_renderer, font, m_ui);
     m_cheats_menu = new RguiCheats(m_renderer, font);
     m_controls_menu = new RguiControls(m_ui, m_renderer, font);

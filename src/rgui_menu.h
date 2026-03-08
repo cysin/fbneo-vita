@@ -30,6 +30,9 @@ public:
     int getSelectedIndex() const;
     int getSelectedId() const;
     void setSelectedIndex(int idx);
+    void setSelectionState(int idx, int scrollOffset);
+    int getScrollOffset() const;
+    int getVisibleRowCount() const;
 
     Action handleInput(c2d::Input *input);
 
