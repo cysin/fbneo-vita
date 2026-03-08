@@ -1,0 +1,11 @@
+build/
+*.vpk
+*.velf
+*.sfo
+*.self
+*.elf
+*.o
+*.obj
+*.a
+*.zip
+eboot.bin
