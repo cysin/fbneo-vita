@@ -123,6 +123,7 @@ namespace pemu {
 
         bool loadGame(const Game &game);
         bool saveGame();
+        void clearGame();
 
         c2d::config::Option *get(int id, bool isGame = false);
         c2d::config::Option *getOption(int id, bool isGame = false);

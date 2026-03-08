@@ -431,11 +431,24 @@ bool RguiMain::onInput(Input::Player *players) {
                     if (m_in_game) {
                         m_ui->getConfig()->saveGame();
                         m_ui->getUiEmu()->stop();
+                        m_in_game = false;
                     }
 
-                    hide();
                     m_ui->getConfig()->loadGame(game);
-                    m_ui->getUiEmu()->load(game);
+                    if (m_ui->getUiEmu()->load(game) == 0) {
+                        hide();
+                        m_ui->getInput()->clear();
+                    } else {
+                        m_ui->getUiProgressBox()->setVisibility(Visibility::Hidden);
+                        m_ui->getConfig()->clearGame();
+                        m_ui->updateInputMapping(false);
+                        m_ui->getInput()->setRepeatDelay(INPUT_DELAY);
+                        fbneo_vita::load_error::show(m_ui, &game);
+                        m_screen = SCREEN_FILEBROWSER;
+                        RectangleShape::setVisibility(Visibility::Visible);
+                        m_visible = true;
+                        m_ui->getInput()->clear();
+                    }
                 }
             } else if (result == 1) {
                 // remember directory even on cancel

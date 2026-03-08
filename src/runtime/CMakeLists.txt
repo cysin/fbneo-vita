@@ -9,6 +9,7 @@ set(CROSS2DUI_INCLUDE
         ${CMAKE_CURRENT_SOURCE_DIR}/..
 )
 set(CROSS2DUI_SOURCE
+        ${CMAKE_CURRENT_SOURCE_DIR}/load_error.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/pemu_config.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/skin.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/ui_emu.cpp

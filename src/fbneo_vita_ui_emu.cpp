@@ -58,9 +58,6 @@ int FBNeoVitaUiEmu::getSekCpuCore() {
     std::string bios = pMain->getConfig()->get(PEMUConfig::OptId::EMU_NEOBIOS, true)->getString();
     if (isHardware(hardware, HARDWARE_PREFIX_SNK) && Utility::contains(bios, "UNIBIOS")) {
         sekCpuCore = 1; // SEK_CORE_M68K: USE C M68K CORE
-        pMain->getUiMessageBox()->show(
-                "WARNING", "UNIBIOS DOESNT SUPPORT THE M68K ASM CORE\n"
-                           "CYCLONE ASM CORE DISABLED", "OK");
     }
 
     if (isHardware(hardware, HARDWARE_PREFIX_SEGA_MEGADRIVE)) {
@@ -109,13 +106,17 @@ int FBNeoVitaUiEmu::getSekCpuCore() {
 #endif
 
 int FBNeoVitaUiEmu::load(const Game &game) {
+    fbneo_vita::load_error::clear();
     currentGame = game;
 
     FBNeoVitaUtility::setDriverActive(game);
     if (nBurnDrvActive >= nBurnDrvCount) {
         printf("FBNeoVitaUiEmu::load: driver not found\n");
-        pMain->getUiProgressBox()->setVisibility(Visibility::Hidden);
-        pMain->getUiMessageBox()->show("ERROR", "THIS GAME IS NOT SUPPORTED BY FBNEO...", "OK");
+        fbneo_vita::load_error::set(
+                "Unsupported Game",
+                "This ROM is not supported by FBNeo.",
+                game.path);
+        stop();
         return -1;
     }
 
@@ -146,8 +147,12 @@ int FBNeoVitaUiEmu::load(const Game &game) {
     if (DrvInit((int) nBurnDrvActive, false) != 0) {
         printf("\nFBNeoVitaUiEmu::load: driver initialisation failed\n");
         delete (aud);
-        pMain->getUiProgressBox()->setVisibility(Visibility::Hidden);
-        pMain->getUiMessageBox()->show("ERROR", "DRIVER INIT FAILED", "OK");
+        if (!fbneo_vita::load_error::has()) {
+            fbneo_vita::load_error::set(
+                    "Driver Init Failed",
+                    "FBNeo could not start this ROM.",
+                    game.path);
+        }
         stop();
         return -1;
     }

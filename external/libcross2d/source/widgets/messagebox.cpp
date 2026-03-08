@@ -6,6 +6,47 @@
 
 using namespace c2d;
 
+namespace {
+void updateMessageBoxLayout(c2d::MessageBox *box, c2d::Text *title, c2d::Text *message,
+                            c2d::Text *timeout, c2d::Button **buttons,
+                            float width, float height) {
+    float titleFontSize = (float) title->getCharacterSize();
+    float messageFontSize = (float) message->getCharacterSize();
+    float ratio = messageFontSize / (float) C2D_DEFAULT_CHAR_SIZE;
+    float horizontalPadding = 16.0f * ratio;
+    float titleY = 16.0f * ratio;
+    float messageY = messageFontSize + (64.0f * ratio);
+    float bottomPadding = 20.0f * ratio;
+    float buttonHeight = buttons[0] ? buttons[0]->getSize().y : (height / 6.0f);
+    bool hasButtons = false;
+    for (int i = 0; i < 2; i++) {
+        if (buttons[i] && buttons[i]->isVisible()) {
+            hasButtons = true;
+            buttonHeight = std::max(buttonHeight, buttons[i]->getSize().y);
+        }
+    }
+    float reservedBottom = bottomPadding;
+    if (hasButtons) {
+        reservedBottom += buttonHeight + (24.0f * ratio);
+    } else if (timeout && timeout->isVisible()) {
+        reservedBottom += timeout->getLocalBounds().height + (24.0f * ratio);
+    }
+
+    title->setPosition(horizontalPadding, titleY);
+    title->setSizeMax(width - titleFontSize * 2.0f, titleFontSize + (8.0f * ratio));
+
+    message->setPosition(horizontalPadding, messageY);
+    message->setSizeMax(width - messageFontSize * 2.0f,
+                        std::max(0.0f, height - messageY - reservedBottom));
+
+    if (timeout) {
+        timeout->setSize(width - (16.0f * ratio), 0);
+        timeout->setPosition(width / 2.0f, height - buttonHeight - (16.0f * ratio));
+        timeout->setOrigin(Origin::Center);
+    }
+}
+}
+
 MessageBox::MessageBox(const c2d::FloatRect &rect, c2d::Input *ipt,
                        c2d::Font *font, int fontSize) : RectangleShape(rect) {
     input = ipt;
@@ -47,6 +88,7 @@ MessageBox::MessageBox(const c2d::FloatRect &rect, c2d::Input *ipt,
     timeout->setLineSpacingModifier(4 * ratio);
     add(timeout);
 
+    updateMessageBoxLayout(this, title, message, timeout, buttons, rect.width, rect.height);
     setVisibility(Visibility::Hidden);
 }
 
@@ -98,6 +140,7 @@ int MessageBox::show(const std::string &txt, const std::string &msg,
         buttons[1]->setVisibility(Visibility::Hidden);
     }
 
+    updateMessageBoxLayout(this, title, message, timeout, buttons, getSize().x, getSize().y);
     setVisibility(Visibility::Visible);
     setLayer(10000);
 
@@ -214,9 +257,5 @@ void MessageBox::setSize(const Vector2f &size) {
 void MessageBox::setSize(float width, float height) {
     RectangleShape::setSize(width, height);
 
-    float fontSize = (float) title->getCharacterSize();
-    title->setSizeMax(width - fontSize * 2, fontSize + 4);
-
-    fontSize = (float) message->getCharacterSize();
-    message->setSizeMax(width - fontSize * 2, height * 0.6f);
+    updateMessageBoxLayout(this, title, message, timeout, buttons, width, height);
 }

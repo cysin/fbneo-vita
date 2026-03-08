@@ -8,6 +8,7 @@
 #include "cross2d/c2d.h"
 
 #include "game_types.h"
+#include "load_error.h"
 #include "pemu_config.h"
 #include "skin.h"
 #include "ui_video.h"

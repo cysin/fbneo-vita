@@ -210,6 +210,11 @@ bool PEMUConfig::saveGame() {
     return p_game_config->save();
 }
 
+void PEMUConfig::clearGame() {
+    delete (p_game_config);
+    p_game_config = nullptr;
+}
+
 bool PEMUConfig::addRomPath(const std::string &name, const std::string &path, const System &system) {
     printf("PEMUConfig::addRomPath: %s (system: %s, path: %s)\n",
            name.c_str(), system.name.c_str(), path.c_str());
@@ -347,5 +352,5 @@ int PEMUConfig::getJoystickDeadZone(int player, bool isGame) {
 
 PEMUConfig::~PEMUConfig() {
     printf("PEMUConfig::~PEMUConfig()\n");
-    delete (p_game_config);
+    clearGame();
 }

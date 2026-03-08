@@ -49,8 +49,14 @@ int main(int argc, char **argv) {
 
     if (!game.path.empty()) {
         cfg->loadGame(game);
-        uiEmu->setExitOnStop(true);
-        uiEmu->load(game);
+        if (uiEmu->load(game) == 0) {
+            uiEmu->setExitOnStop(true);
+        } else {
+            cfg->clearGame();
+            pemu_ui->updateInputMapping(false);
+            g_rgui->show(false);
+            fbneo_vita::load_error::show(pemu_ui, &game);
+        }
     } else {
         g_rgui->show(false);
     }

@@ -9,6 +9,8 @@
 using namespace pemu;
 
 extern UiMain *pemu_ui;
+extern StringSet BzipText;
+extern StringSet BzipDetail;
 
 extern UINT8 NeoSystem;
 int bDrvOkay = 0;
@@ -35,7 +37,8 @@ static UINT8 NeoSystemList[] = {
         0x05, // "MVS USA ver. 5 (6 slot)"
         0x08, // "MVS Japan ver. 6 (? slot)"
         0x09, // "MVS Japan ver. 5 (? slot)"
-        0x0a, // "MVS Japan ver. 6 (4 slot)"
+        0x0a, // "MVS Japan ver. 3 (4 slot)"
+        0x0d, // "MVS Japan (J3)"
         0x10, // "AES Asia"
         0x0f, // "AES Japan"
         0x0b, // "NEO-MVH MV1C (Asia)"
@@ -43,6 +46,22 @@ static UINT8 NeoSystemList[] = {
         0x12, // "Deck ver. 6 (Git Ver 1.3)"
         0x11, // "Development Kit"
 };
+static_assert(sizeof(NeoSystemList) / sizeof(NeoSystemList[0]) == 20,
+              "NeoSystemList must match the NEOBIOS option list");
+
+static UINT8 getNeoSystemFromConfig() {
+    constexpr int kDefaultNeoBiosIndex = 4; // MVS Asia/Europe ver. 6 (1 slot)
+    const auto opt = pemu_ui->getConfig()->get(PEMUConfig::OptId::EMU_NEOBIOS, true);
+    int index = opt ? opt->getArrayIndex() : kDefaultNeoBiosIndex;
+    const int count = (int)(sizeof(NeoSystemList) / sizeof(NeoSystemList[0]));
+
+    if (index < 0 || index >= count) {
+        printf("NeoSystem: invalid BIOS index %i, fallback to %i\n", index, kDefaultNeoBiosIndex);
+        index = kDefaultNeoBiosIndex;
+    }
+
+    return NeoSystemList[index];
+}
 
 static int DoLibInit() {
     int nRet;
@@ -52,11 +71,17 @@ static int DoLibInit() {
     nRet = BzipOpen(false);
     printf("DoLibInit: BzipOpen = %i\n", nRet);
     if (nRet) {
+        if (!fbneo_vita::load_error::has()) {
+            std::string summary = BzipText.szText ? BzipText.szText : "The ROM set could not be opened.";
+            std::string detail = BzipDetail.szText ? BzipDetail.szText : "";
+            fbneo_vita::load_error::set("ROM Load Failed", summary, detail);
+        }
         BzipClose();
         return 1;
     }
 
-    NeoSystem = NeoSystemList[pemu_ui->getConfig()->get(PEMUConfig::OptId::EMU_NEOBIOS, true)->getArrayIndex()];
+    NeoSystem = getNeoSystemFromConfig();
+    printf("DoLibInit: NeoSystem = 0x%02x\n", NeoSystem);
 
     nRet = BurnDrvInit();
     printf("DoLibInit: BurnDrvInit = %i\n", nRet);
@@ -85,7 +110,10 @@ static int DrvLoadRom(unsigned char *Dest, int *pnWrote, int i) {
         sprintf(szText, "Error loading %s for %s.\nEmulation will likely have problems.",
                 pszFilename, BurnDrvGetTextA(DRV_NAME));
         printf("DrvLoadRom: %s\n", szText);
-        pemu_ui->getUiMessageBox()->show("ERROR", szText, "OK");
+        fbneo_vita::load_error::set(
+                "ROM Load Failed",
+                "A required ROM entry could not be loaded.",
+                szText);
     }
 
     BzipClose();

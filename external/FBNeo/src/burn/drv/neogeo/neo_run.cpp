@@ -446,7 +446,9 @@ static INT32 NeoLoad68KBIOS(INT32 nNewBIOS)
 
 		if (pszFn) bprintf(0, _T("NeoGeo CD: Loading BIOS  \"%S\".\n"), pszFn);
 
-		BurnLoadRom(Neo68KBIOS,	rom_pos, 1);
+		if (BurnLoadRom(Neo68KBIOS, rom_pos, 1)) {
+			return 1;
+		}
 		return 0;
 	}
 
@@ -478,12 +480,18 @@ static INT32 NeoLoad68KBIOS(INT32 nNewBIOS)
 	// Load the BIOS ROMs
 	if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SNK_MVS) {
 			// Load the BIOS ROMs
-			BurnLoadRom(Neo68KBIOS, 0x00000 + nBIOS, 1);
+			if (BurnLoadRom(Neo68KBIOS, 0x00000 + nBIOS, 1)) {
+				return 1;
+			}
 	} else {
 		if (nBIOS >= 0) {
-			BurnLoadRom(Neo68KBIOS, 0x00080 + nBIOS, 1);
+			if (BurnLoadRom(Neo68KBIOS, 0x00080 + nBIOS, 1)) {
+				return 1;
+			}
 		} else {
-			BurnLoadRom(Neo68KBIOS, 0x00080 +     0, 1);
+			if (BurnLoadRom(Neo68KBIOS, 0x00080 + 0, 1)) {
+				return 1;
+			}
 		}
 	}
 
@@ -4285,25 +4293,43 @@ INT32 NeoInit()
 	}
 
 	if (nNeoSystemType & NEO_SYS_PCB) {
-		BurnLoadRom(Neo68KBIOS, 0x00080 +     36, 1);
+		if (BurnLoadRom(Neo68KBIOS, 0x00080 + 36, 1)) {
+			return 1;
+		}
 	}
 
 	if ((BurnDrvGetHardwareCode() & HARDWARE_PUBLIC_MASK) == HARDWARE_SNK_MVS) {
-		BurnLoadRom(NeoZ80BIOS,		0x00000 + 37, 1);
-		BurnLoadRom(NeoTextROMBIOS,	0x00000 + 38, 1);
-		BurnLoadRom(NeoZoomROM,		0x00000 + 39, 1);
+		if (BurnLoadRom(NeoZ80BIOS, 0x00000 + 37, 1)) {
+			return 1;
+		}
+		if (BurnLoadRom(NeoTextROMBIOS, 0x00000 + 38, 1)) {
+			return 1;
+		}
+		if (BurnLoadRom(NeoZoomROM, 0x00000 + 39, 1)) {
+			return 1;
+		}
 	} else {
 
 		// Still load the Z80 BIOS & text layer data for AES systems, since it might be switched to MVS later
 
 		if (nNeoSystemType & NEO_SYS_PCB) {
 			bZ80BIOS = false;
-			BurnLoadRom(NeoTextROMBIOS,	0x00080 + 38, 1);
-			BurnLoadRom(NeoZoomROM,		0x00080 + 39, 1);
+			if (BurnLoadRom(NeoTextROMBIOS, 0x00080 + 38, 1)) {
+				return 1;
+			}
+			if (BurnLoadRom(NeoZoomROM, 0x00080 + 39, 1)) {
+				return 1;
+			}
 		} else {
-			BurnLoadRom(NeoZ80BIOS,		0x00080 + 37, 1);
-			BurnLoadRom(NeoTextROMBIOS,	0x00080 + 38, 1);
-			BurnLoadRom(NeoZoomROM,		0x00080 + 39, 1);
+			if (BurnLoadRom(NeoZ80BIOS, 0x00080 + 37, 1)) {
+				return 1;
+			}
+			if (BurnLoadRom(NeoTextROMBIOS, 0x00080 + 38, 1)) {
+				return 1;
+			}
+			if (BurnLoadRom(NeoZoomROM, 0x00080 + 39, 1)) {
+				return 1;
+			}
 		}
 	}
 	BurnUpdateProgress(0.0, _T("Preprocessing text layer graphics...")/*, BST_PROCESS_TXT*/, 0);

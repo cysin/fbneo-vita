@@ -199,7 +199,7 @@ static int CheckRoms() {
 
         memset(&ri, 0, sizeof(ri));
         BurnDrvGetRomInfo(&ri, i);                            // Find information about the wanted rom
-        if (ri.nCrc && (ri.nType & BRF_OPT) == 0 && (ri.nType & BRF_NODUMP)) {
+        if (ri.nCrc && (ri.nType & BRF_OPT) == 0 && (ri.nType & BRF_NODUMP) == 0) {
             int nState = RomFind[i].nState;                    // Get the state of the rom in the zip file
             int nError = GetBZipError(nState);
 
@@ -290,6 +290,10 @@ static int __cdecl BzipBurnLoadRom(unsigned char *Dest, int *pnWrote, int i) {
         TCHAR szTemp[256] = _T("");
         snprintf(szTemp, 255, "%s (not found)\n", szText);
         //fprintf(stderr, szTemp);
+        fbneo_vita::load_error::set(
+                "Missing ROM Entry",
+                "A required entry was not found in the archive.",
+                pszRomName ? pszRomName : "unknown");
         AppError(szTemp, 1);
         return 1;
     }
@@ -311,6 +315,10 @@ static int __cdecl BzipBurnLoadRom(unsigned char *Dest, int *pnWrote, int i) {
         _stprintf(szTemp, _T("%s reading %.30s from %.30s"), nRet == 2 ? _T("CRC error") : _T("Error"), pszRomName,
                   GetFilenameW(szBzipName[nCurrentZip]));
         //fprintf(stderr, szTemp);
+        fbneo_vita::load_error::set(
+                "ROM Read Error",
+                "A required ROM entry could not be read from the archive.",
+                szTemp);
         AppError(szTemp, 1);
         return 1;
     }
@@ -365,6 +373,14 @@ int BzipOpen(bool bootApp) {
         if (ZipOpen(TCHARToANSI(szBzipName[z], NULL, 0)) == 0) {    // Open the rom zip file
             nZipsFound++;
             nCurrentZip = z;
+        } else if (!bootApp && !fbneo_vita::load_error::has()) {
+            const std::string zipPath = szBzipName[z];
+            if (pemu_ui->getIo()->exist(zipPath)) {
+                fbneo_vita::load_error::set(
+                        "Invalid ROM Archive",
+                        "A required archive exists but could not be opened.",
+                        zipPath);
+            }
         }
 
         if (nCurrentZip >= 0) {
@@ -455,6 +471,12 @@ int BzipOpen(bool bootApp) {
             if (!bootApp) {
                 BzipText.Add(_T("Couldn't find %hs;\n"), szName);
                 printf("Couldn't find %s;\n", szName);
+                if (!fbneo_vita::load_error::has()) {
+                    fbneo_vita::load_error::set(
+                            "Missing ROM Archive",
+                            "A required archive could not be found.",
+                            szName);
+                }
             }
         }
 
@@ -475,39 +497,81 @@ int BzipOpen(bool bootApp) {
             if (nBzipError & 0x07) {
                 BzipText.Add(_T("However the romset is INCOMPLETE.\n"));
                 printf("However the romset is INCOMPLETE.\n");
+                if (!fbneo_vita::load_error::has()) {
+                    fbneo_vita::load_error::set(
+                            "Incomplete ROM Set",
+                            BzipText.szText ? BzipText.szText : "The ROM set is incomplete.",
+                            BzipDetail.szText ? BzipDetail.szText : "");
+                }
                 return 1;
             }
 
             if (nBzipError & 0x01) {
                 BzipText.Add(_T("Essential rom data is missing; the game probably won't run.\n"));
                 printf("Essential rom data is missing; the game probably won't run.\n");
+                if (!fbneo_vita::load_error::has()) {
+                    fbneo_vita::load_error::set(
+                            "Missing ROM Data",
+                            BzipText.szText ? BzipText.szText : "Essential ROM data is missing.",
+                            BzipDetail.szText ? BzipDetail.szText : "");
+                }
                 return 1;
             } else {
                 if (nBzipError & 0x10) {
                     BzipText.Add(_T("Some essential roms are different. "));
                     printf("Some essential roms are different. ");
+                    if (!fbneo_vita::load_error::has()) {
+                        fbneo_vita::load_error::set(
+                                "Bad ROM Data",
+                                BzipText.szText ? BzipText.szText : "Some essential ROM files do not match the expected set.",
+                                BzipDetail.szText ? BzipDetail.szText : "");
+                    }
                     return 1;
                 }
             }
             if (nBzipError & 0x02) {
                 BzipText.Add(_T("Graphical data is missing. "));
                 printf("Graphical data is missing. ");
+                if (!fbneo_vita::load_error::has()) {
+                    fbneo_vita::load_error::set(
+                            "Missing Graphics ROM",
+                            BzipText.szText ? BzipText.szText : "Graphics ROM data is missing.",
+                            BzipDetail.szText ? BzipDetail.szText : "");
+                }
                 return 1;
             } else {
                 if (nBzipError & 0x20) {
                     BzipText.Add(_T("Some graphics roms are different. "));
                     printf("Some graphics roms are different. ");
+                    if (!fbneo_vita::load_error::has()) {
+                        fbneo_vita::load_error::set(
+                                "Bad Graphics ROM",
+                                BzipText.szText ? BzipText.szText : "Some graphics ROM files do not match the expected set.",
+                                BzipDetail.szText ? BzipDetail.szText : "");
+                    }
                     return 1;
                 }
             }
             if (nBzipError & 0x04) {
                 BzipText.Add(_T("Sound data is missing. "));
                 printf("Sound data is missing. ");
+                if (!fbneo_vita::load_error::has()) {
+                    fbneo_vita::load_error::set(
+                            "Missing Sound ROM",
+                            BzipText.szText ? BzipText.szText : "Sound ROM data is missing.",
+                            BzipDetail.szText ? BzipDetail.szText : "");
+                }
                 return 1;
             } else {
                 if (nBzipError & 0x40) {
                     BzipText.Add(_T("Some sound roms are different. "));
                     printf("Some sound roms are different. ");
+                    if (!fbneo_vita::load_error::has()) {
+                        fbneo_vita::load_error::set(
+                                "Bad Sound ROM",
+                                BzipText.szText ? BzipText.szText : "Some sound ROM files do not match the expected set.",
+                                BzipDetail.szText ? BzipDetail.szText : "");
+                    }
                     return 1;
                 }
             }

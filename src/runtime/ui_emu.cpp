@@ -124,6 +124,7 @@ void UiEmu::stop() {
 
     pMain->updateInputMapping(false);
     setVisibility(Visibility::Hidden);
+    currentGame = {};
 
     if (mExitOnStop) {
         pMain->setVisibility(Visibility::Hidden);
