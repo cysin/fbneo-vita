@@ -30,6 +30,10 @@ char szAppEEPROMPath[MAX_PATH];
 char szAppHDDPath[MAX_PATH];
 TCHAR szAppCheatsPath[MAX_PATH];
 
+TCHAR* AdaptiveEncodingReads(const TCHAR* /* pszFileName */) {
+    return nullptr;
+}
+
 void BurnPathsInit(c2d::C2DIo *io) {
     printf("BurnPathsInit: dataPath = %s\n", io->getDataPath().c_str());
 

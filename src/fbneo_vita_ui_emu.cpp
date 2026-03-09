@@ -218,6 +218,10 @@ void Reinitialise(void) {
            size.x, size.y, aspect.x, aspect.y);
 }
 
+void ReinitialiseVideo(void) {
+    Reinitialise();
+}
+
 void FBNeoVitaUiEmu::stop() {
     printf("FBNeoVitaUiEmu::stop()\n");
     DrvExit();

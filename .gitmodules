@@ -1,0 +1,8 @@
+[submodule "external/FBNeo"]
+	path = external/FBNeo
+	url = https://github.com/finalburnneo/FBNeo.git
+	branch = master
+[submodule "external/libcross2d"]
+	path = external/libcross2d
+	url = https://github.com/Cpasjuste/libcross2d.git
+	branch = master

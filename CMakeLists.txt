@@ -159,10 +159,12 @@ set(CPU_DIRS
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/f8
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/h6280
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/hd6309
+        ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/hmcs40
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/i8x41
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/i386
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/i8039
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/i8051
+        ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/i8085
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/konami
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/m68k
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/m377
@@ -170,6 +172,7 @@ set(CPU_DIRS
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/m6800
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/m6805
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/m6809
+        ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/mb88xx
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/mips3
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/nec
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/pic16c5x
@@ -191,6 +194,7 @@ file(GLOB_RECURSE SRC_CPU
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/m68k/m68kcpu.c
 )
 list(REMOVE_ITEM SRC_CPU
+        ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/hmcs40/hmcs40op.cpp
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/tms34010_intf.cpp
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/tms34010/tms34010_newdasm.cpp
         ${CMAKE_SOURCE_DIR}/external/FBNeo/src/cpu/tms34010/tms34010_dasm.cpp

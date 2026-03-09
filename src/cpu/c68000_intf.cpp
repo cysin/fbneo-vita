@@ -1039,6 +1039,27 @@ INT32 SekShouldInterrupt()
     }
 }
 
+INT32 SekGetIRQLevel()
+{
+#ifdef EMU_C68K
+    if ((nSekCpuCore == SEK_CORE_C68K) && nSekActive != -1 && nSekCPUType[nSekActive] == 0x68000) {
+        return c68k[nSekActive].irq & 7;
+    }
+#endif
+
+#ifdef EMU_M68K
+    if (nSekCpuCore == SEK_CORE_M68K) {
+        return m68k_get_irq();
+    }
+#endif
+
+    if (nSekActive != -1) {
+        return nSekIRQPending[nSekActive] & 7;
+    }
+
+    return 0;
+}
+
 void SekBurnUntilInt()
 {
     if(nSekCpuCore == SEK_CORE_M68K) {

@@ -6,8 +6,8 @@ This repository is Vita-only. It contains:
 
 - the Vita application code
 - the RGUI-based frontend and in-game menu
-- vendored `FBNeo`
-- vendored `libcross2d`
+- `FBNeo` as a git submodule
+- `libcross2d` as a git submodule
 - packaged Vita assets and UI resources
 
 ## Features
@@ -33,6 +33,12 @@ export PATH="$VITASDK/bin:$PATH"
 ```
 
 ## Build
+
+Initialize submodules:
+
+```bash
+git submodule update --init --recursive
+```
 
 Configure:
 
@@ -69,9 +75,9 @@ Output:
 - `data`
   Packaged fonts, skin files, LiveArea assets, and bundled data such as `hiscore.dat`.
 - `external/FBNeo`
-  Vendored `FBNeo` source tree.
+  `FBNeo` git submodule.
 - `external/libcross2d`
-  Vendored rendering, input, audio, and platform support library.
+  `libcross2d` git submodule for rendering, input, audio, and platform support.
 
 ## Runtime Data
 
