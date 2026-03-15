@@ -123,7 +123,10 @@ void RguiControls::saveCurrentScope() const {
     } else {
         m_ui->getConfig()->save();
     }
-    m_ui->updateInputMapping(m_in_game);
+
+    // Keep menu navigation on the UI mapping while the controls screen is open.
+    // The per-game control mapping is restored when the emulator resumes.
+    m_ui->updateInputMapping(false);
 }
 
 std::string RguiControls::getBindingLabel(int value) const {
