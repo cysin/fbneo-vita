@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 #ifndef __CROSS2D__
 #include "retro_common.h"
@@ -6,6 +7,7 @@
 #include "burn_gun.h"
 #ifdef __CROSS2D__
 #include "rgui_turbo.h"
+#include "runtime/runtime.h"
 #endif
 
 bool bStreetFighterLayout = false;
@@ -38,6 +40,83 @@ static bool bControllersNeedRefresh = true;
 static bool bControllersSetOnce = false;
 static bool bLibretroSupportsBitmasks = false;
 static char* pDirections[MAX_PLAYERS][6];
+
+#ifdef __CROSS2D__
+extern pemu::UiMain *pemu_ui;
+
+namespace {
+	constexpr int TURBO_SLOT_PHYSICAL_CODES[TURBO_MAX_BUTTONS] = {
+		SDL_CONTROLLER_BUTTON_A,                 // Cross
+		SDL_CONTROLLER_BUTTON_B,                 // Circle
+		SDL_CONTROLLER_BUTTON_LEFTSHOULDER,      // L1
+		SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,     // R1
+		SDL_CONTROLLER_BUTTON_X,                 // Square
+		SDL_CONTROLLER_BUTTON_Y,                 // Triangle
+		SDL_CONTROLLER_AXIS_TRIGGERLEFT + 100,   // L2
+		SDL_CONTROLLER_AXIS_TRIGGERRIGHT + 100,  // R2
+	};
+
+	unsigned GetTurboMappedJoypadId(unsigned port, int turbo_slot)
+	{
+		if (pemu_ui == nullptr || turbo_slot < 0 || turbo_slot >= TURBO_MAX_BUTTONS) {
+			return 0;
+		}
+
+		auto *input = pemu_ui->getInput();
+		if (input == nullptr) {
+			return 0;
+		}
+
+		auto *player = input->getPlayer((int)port);
+		if (player == nullptr) {
+			return 0;
+		}
+
+		const int physical_code = TURBO_SLOT_PHYSICAL_CODES[turbo_slot];
+		for (const auto &mapping : player->mapping) {
+			if (mapping.value == physical_code) {
+				return mapping.button;
+			}
+		}
+
+		return 0;
+	}
+}
+#endif
+
+std::string FBNeoGetJoypadActionLabel(unsigned id, unsigned port)
+{
+	std::vector<std::string> labels;
+
+	for (const auto &descriptor : normal_input_descriptors) {
+		if (descriptor.port != port) continue;
+		if (descriptor.device != RETRO_DEVICE_JOYPAD) continue;
+		if (descriptor.index != 0) continue;
+		if (descriptor.id != id) continue;
+		if (descriptor.description == NULL || descriptor.description[0] == '\0') continue;
+
+		std::string label = descriptor.description;
+		if (label.find("Fake") != std::string::npos) continue;
+		if (std::find(labels.begin(), labels.end(), label) == labels.end()) {
+			labels.push_back(label);
+		}
+	}
+
+	if (labels.empty()) {
+		return {};
+	}
+
+	std::string joined = labels[0];
+	for (size_t i = 1; i < labels.size(); i++) {
+		if (joined.size() + labels[i].size() + 3 > 64) {
+			joined += " / ...";
+			break;
+		}
+		joined += " / " + labels[i];
+	}
+
+	return joined;
+}
 
 // Macros
 UINT32 nMacroCount = 0;
@@ -2904,26 +2983,13 @@ void InputMake(void)
 		}
 	}
 
-#ifdef __CROSS2D__
+	#ifdef __CROSS2D__
 	// Turbo fire processing
 	{
 		g_turbo_frame_counter++;
 		bool turbo_active = ((g_turbo_frame_counter / g_turbo.speed) % 2) == 0;
 
 		if (!turbo_active) {
-			// Map turbo button indices to retro joypad IDs
-			// 0=A, 1=B, 2=C(LT), 3=D(RT), 4=X, 5=Y, 6=Z(LB), 7=L(RB)
-			static const unsigned turbo_to_retro[TURBO_MAX_BUTTONS] = {
-				RETRO_DEVICE_ID_JOYPAD_B,   // A
-				RETRO_DEVICE_ID_JOYPAD_A,   // B
-				RETRO_DEVICE_ID_JOYPAD_L,   // C (LT)
-				RETRO_DEVICE_ID_JOYPAD_R,   // D (RT)
-				RETRO_DEVICE_ID_JOYPAD_Y,   // X
-				RETRO_DEVICE_ID_JOYPAD_X,   // Y
-				RETRO_DEVICE_ID_JOYPAD_L2,  // Z (LB)
-				RETRO_DEVICE_ID_JOYPAD_R2,  // L (RB)
-			};
-
 			for (UINT32 ki = 0; ki < MAX_KEYBINDS; ki++) {
 				if (sKeyBinds[ki].device == RETRO_DEVICE_NONE) continue;
 				if (sKeyBinds[ki].device != RETRO_DEVICE_JOYPAD) continue;
@@ -2933,7 +2999,8 @@ void InputMake(void)
 				if (port >= TURBO_MAX_PLAYERS) continue;
 
 				for (int tb = 0; tb < TURBO_MAX_BUTTONS; tb++) {
-					if (g_turbo.enabled[port][tb] && btn_id == turbo_to_retro[tb]) {
+					const unsigned mapped_btn_id = GetTurboMappedJoypadId(port, tb);
+					if (g_turbo.enabled[port][tb] && mapped_btn_id != 0 && btn_id == mapped_btn_id) {
 						// ki IS the nCode (keybind index == switch code)
 						for (UINT32 gi = 0; gi < nGameInpCount; gi++) {
 							struct GameInp *pg = &GameInp[gi];

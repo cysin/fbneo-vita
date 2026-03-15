@@ -13,6 +13,16 @@ int g_turbo_frame_counter = 0;
 
 namespace {
     constexpr const char *GLOBAL_TURBO_FILE = "global_turbo.cfg";
+    constexpr int DISPLAY_ORDER[TURBO_MAX_BUTTONS] = {
+        0, // Cross
+        1, // Circle
+        4, // Square
+        5, // Triangle
+        2, // L1
+        3, // R1
+        6, // L2
+        7, // R2
+    };
 
     void resetTurboConfig() {
         memset(&g_turbo.enabled, 0, sizeof(g_turbo.enabled));
@@ -74,7 +84,8 @@ void RguiTurbo::refresh() {
     int id = 0;
 
     for (int p = 0; p < TURBO_MAX_PLAYERS; p++) {
-        for (int b = 0; b < TURBO_MAX_BUTTONS; b++) {
+        for (int di = 0; di < TURBO_MAX_BUTTONS; di++) {
+            const int b = DISPLAY_ORDER[di];
             RguiMenuItem item;
             char label[32];
             snprintf(label, sizeof(label), "P%d %s", p + 1, s_button_names[b]);
@@ -112,7 +123,8 @@ int RguiTurbo::handleInput(Input *input) {
         if (sel < totalButtons) {
             // toggle button turbo
             int player = sel / TURBO_MAX_BUTTONS;
-            int button = sel % TURBO_MAX_BUTTONS;
+            int displayButton = sel % TURBO_MAX_BUTTONS;
+            int button = DISPLAY_ORDER[displayButton];
             g_turbo.enabled[player][button] = !g_turbo.enabled[player][button];
         } else if (sel == totalButtons) {
             // adjust speed

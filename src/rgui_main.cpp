@@ -178,7 +178,7 @@ void RguiMain::buildSettingsMenu() {
     }
 
     if (!m_in_game) {
-        items.push_back({"Controls", "", ID_SETTINGS_CONTROLS, true});
+        items.push_back({"Default Controls", "", ID_SETTINGS_CONTROLS, true});
         items.push_back({"Turbo Fire", "", ID_SETTINGS_TURBO, true});
         items.push_back({"Hotkeys", "", ID_SETTINGS_HOTKEYS, true});
     }

@@ -5,7 +5,6 @@
 #ifndef FBNEO_VITA_RGUI_CONTROLS_H
 #define FBNEO_VITA_RGUI_CONTROLS_H
 
-#include "rgui_binding_prompt.h"
 #include "rgui_menu.h"
 #include "cross2d/c2d.h"
 
@@ -27,16 +26,25 @@ public:
 
 private:
     void cycleDeadZone(int direction);
-    void captureBinding(int opt_id);
+    void openActionPicker(int physical_code);
+    void buildActionPicker(int physical_code);
+    void applyPhysicalBinding(int physical_code, int action_opt_id);
     void saveCurrentScope() const;
+    std::string getRuntimeActionLabel(int opt_id) const;
+    bool isActionAvailable(int opt_id) const;
+    std::string getActionLabel(int opt_id) const;
+    std::string getBoundActionLabel(int physical_code) const;
+    int getPrimaryBoundActionOptId(int physical_code, bool available_only = false) const;
     std::string getBindingLabel(int value) const;
     std::string getOptionValue(int opt_id) const;
 
     pemu::UiMain *m_ui;
     c2d::Renderer *m_renderer;
     RguiMenu *m_menu;
-    RguiBindingPrompt *m_prompt;
+    RguiMenu *m_action_picker;
     bool m_in_game = false;
+    bool m_picker_visible = false;
+    int m_picker_physical_code = -1;
 };
 
 #endif // FBNEO_VITA_RGUI_CONTROLS_H
