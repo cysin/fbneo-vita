@@ -287,13 +287,19 @@ bool RguiMain::isVisible() const {
     return m_visible;
 }
 
+void RguiMain::resumeGame() {
+    hide();
+    // Consume the button used to exit the menu before game input is restored.
+    m_ui->getInput()->clear();
+    m_ui->getUiEmu()->resume();
+}
+
 void RguiMain::handleMainAction(RguiMenu::Action action) {
     if (action == RguiMenu::CONFIRM) {
         int id = m_main_menu->getSelectedId();
         switch (id) {
             case ID_RESUME:
-                hide();
-                m_ui->getUiEmu()->resume();
+                resumeGame();
                 break;
             case ID_LOAD_ROM:
                 m_screen = SCREEN_FILEBROWSER;
@@ -346,8 +352,7 @@ void RguiMain::handleMainAction(RguiMenu::Action action) {
         }
     } else if (action == RguiMenu::CANCEL) {
         if (m_in_game) {
-            hide();
-            m_ui->getUiEmu()->resume();
+            resumeGame();
         }
     }
 }
@@ -465,8 +470,7 @@ bool RguiMain::onInput(Input::Player *players) {
             int result = m_state_menu->handleInput(input);
             if (result == 0) {
                 // action done
-                hide();
-                m_ui->getUiEmu()->resume();
+                resumeGame();
             } else if (result == 1) {
                 m_screen = SCREEN_MAIN;
                 buildMainMenu();
