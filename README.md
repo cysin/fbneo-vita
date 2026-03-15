@@ -112,6 +112,17 @@ On Vita, application data is stored under:
 
 This directory is used for configuration, saves, cheats, and other runtime-generated files.
 
+## Credits
+
+- `FBNeo`
+  Core emulation is provided by the vendored [`FBNeo`](external/FBNeo) submodule and its contributors.
+- `libcross2d`
+  Rendering, input, audio, and platform support build on the vendored [`libcross2d`](external/libcross2d) submodule by [Cpasjuste](https://github.com/Cpasjuste).
+- `PEMU`
+  The frontend/runtime structure used by this port is based on PEMU code and related work by [Cpasjuste](https://github.com/Cpasjuste).
+
+Both vendored upstreams keep their own source history, licensing, and internal credits in their respective repositories.
+
 ## Notes
 
 - This project is intended for Vita builds only.
