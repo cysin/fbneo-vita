@@ -59,6 +59,29 @@ Output:
 
 - `build/fbneo-vita.vpk`
 
+## Vita Package Assets
+
+The `fbneo-vita.vpk` target copies `data/vita/romfs` into the package, so changes
+under `data/vita/romfs/sce_sys` are included automatically.
+
+- `data/vita/romfs/sce_sys/icon0.png`
+  Bubble icon (`128x128`).
+- `data/vita/romfs/sce_sys/pic0.png`
+  Package image shown on the Vita info screen (`960x544`).
+- `data/vita/romfs/sce_sys/livearea/contents/bg.png`
+  LiveArea background (`840x500`).
+- `data/vita/romfs/sce_sys/livearea/contents/startup.png`
+  LiveArea startup image (`280x158`).
+
+After exporting replacement artwork, rewrite the Vita PNGs before building:
+
+```bash
+scripts/fix-vita-package-pngs.sh
+```
+
+The script strips metadata and converts the package art to indexed `PNG8`, which
+avoids Vita installer issues with some truecolor PNGs.
+
 ## Optional Build Flag
 
 - `-DOPTION_LIGHT=ON`
@@ -74,6 +97,8 @@ Output:
   Runtime UI, configuration, skin loading, and shared app infrastructure.
 - `data`
   Packaged fonts, skin files, LiveArea assets, and bundled data such as `hiscore.dat`.
+- `scripts`
+  Helper utilities, including Vita package PNG normalization.
 - `external/FBNeo`
   `FBNeo` git submodule.
 - `external/libcross2d`

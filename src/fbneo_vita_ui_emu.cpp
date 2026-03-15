@@ -120,6 +120,57 @@ int FBNeoVitaUiEmu::load(const Game &game) {
         return -1;
     }
 
+    // Pre-flight memory check: sum ROM sizes and reject games that would exceed
+    // the Vita's available memory. The Vita heap is 256 MB but the app, GPU, and
+    // driver buffers consume a significant portion, leaving roughly 100 MB usable
+    // for ROM data.  Drivers like Cave CV1000 also allocate large render buffers
+    // (epic12 bitmap ~128 MB, palette LUT ~32 MB) on top of ROM data, so even a
+    // modest ROM total can push the system past its limit.
+    {
+        UINT64 totalRomBytes = 0;
+        struct BurnRomInfo ri;
+        for (UINT32 i = 0; BurnDrvGetRomInfo(&ri, i) == 0; i++) {
+            if (ri.nLen) {
+                totalRomBytes += ri.nLen;
+            }
+        }
+
+        // Estimate overhead multiplier based on hardware type.
+        // CV1K games need ~2x ROM size for extra buffers (epic12 VRAM, palette
+        // LUT, RAM copies, SH-3 emulation state).
+        UINT64 estimatedTotal = totalRomBytes;
+        int hardware = BurnDrvGetHardwareCode();
+        if ((hardware & 0xffff0000) == HARDWARE_CAVE_CV1000) {
+            estimatedTotal = totalRomBytes * 2;
+        }
+
+        // 200 MB is a safe upper bound for what we can allocate on Vita
+        // (256 MB heap minus ~50 MB for app code, GPU, UI, audio, OS overhead).
+        static const UINT64 VITA_MAX_EMU_BYTES = 200ULL * 1024 * 1024;
+
+        printf("FBNeoVitaUiEmu::load: ROM data=%llu bytes, estimated total=%llu bytes (limit=%llu)\n",
+               (unsigned long long)totalRomBytes, (unsigned long long)estimatedTotal,
+               (unsigned long long)VITA_MAX_EMU_BYTES);
+
+        if (estimatedTotal > VITA_MAX_EMU_BYTES) {
+            printf("FBNeoVitaUiEmu::load: game requires too much memory\n");
+            char detail[256];
+            snprintf(detail, sizeof(detail),
+                     "ROM data: %llu MB, estimated need: %llu MB\n"
+                     "PS Vita limit: %llu MB",
+                     (unsigned long long)(totalRomBytes / (1024 * 1024)),
+                     (unsigned long long)(estimatedTotal / (1024 * 1024)),
+                     (unsigned long long)(VITA_MAX_EMU_BYTES / (1024 * 1024)));
+            fbneo_vita::load_error::set(
+                    "Not Enough Memory",
+                    "This game requires more memory than the\n"
+                    "PS Vita can provide.",
+                    detail);
+            stop();
+            return -1;
+        }
+    }
+
 #ifdef __FBNEO_VITA_ARM__
     nSekCpuCore = getSekCpuCore();
     printf("nSekCpuCore: %s\n", nSekCpuCore > 0 ? "M68K" : "C68K (ASM)");
