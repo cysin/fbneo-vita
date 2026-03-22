@@ -45,7 +45,8 @@ namespace {
         return normalized;
     }
 
-    std::string loadBrowsePath(c2d::Io *io) {
+    std::string loadBrowsePath(c2d::Io *io, std::string &outLastRom) {
+        outLastRom.clear();
         char path[1024];
         snprintf(path, sizeof(path), "%s%s", szAppConfigPath, RGUI_LAST_ROM_PATH_FILE);
 
@@ -59,6 +60,9 @@ namespace {
         if (fgets(line, sizeof(line), f)) {
             browsePath = normalizeBrowsePath(io, line);
         }
+        if (fgets(line, sizeof(line), f)) {
+            outLastRom = Utility::trim(std::string(line));
+        }
         fclose(f);
 
         if (browsePath.empty()) {
@@ -67,7 +71,7 @@ namespace {
         return browsePath;
     }
 
-    void saveBrowsePath(const std::string &browsePath) {
+    void saveBrowsePath(const std::string &browsePath, const std::string &lastRom) {
         if (browsePath.empty()) {
             return;
         }
@@ -80,6 +84,9 @@ namespace {
             return;
         }
         fprintf(f, "%s\n", browsePath.c_str());
+        if (!lastRom.empty()) {
+            fprintf(f, "%s\n", lastRom.c_str());
+        }
         fclose(f);
     }
 
@@ -111,7 +118,7 @@ RguiMain::RguiMain(UiMain *ui)
     : RectangleShape(ui->getSize()), m_ui(ui), m_renderer(ui) {
     RectangleShape::setFillColor(Color::Transparent);
 
-    m_last_browse_path = loadBrowsePath(m_renderer->getIo());
+    m_last_browse_path = loadBrowsePath(m_renderer->getIo(), m_last_rom_name);
     m_rgui_font = loadRguiFont(m_ui);
     std::string root_browse_path = getDefaultBrowsePath(m_renderer->getIo());
 
@@ -303,7 +310,7 @@ void RguiMain::handleMainAction(RguiMenu::Action action) {
                 break;
             case ID_LOAD_ROM:
                 m_screen = SCREEN_FILEBROWSER;
-                m_filebrowser->setPath(m_last_browse_path);
+                m_filebrowser->setPath(m_last_browse_path, m_last_rom_name);
                 m_ui->getInput()->clear();
                 break;
             case ID_SAVE_STATE:
@@ -422,11 +429,11 @@ bool RguiMain::onInput(Input::Player *players) {
         case SCREEN_FILEBROWSER: {
             int result = m_filebrowser->handleInput(input);
             if (result == 0) {
-                // file selected - remember directory for next time
+                // file selected - remember directory and filename for next time
                 m_last_browse_path = m_filebrowser->getCurrentPath();
-                saveBrowsePath(m_last_browse_path);
-                // load ROM
                 std::string path = m_filebrowser->getSelectedPath();
+                m_last_rom_name = Utility::baseName(path);
+                saveBrowsePath(m_last_browse_path, m_last_rom_name);
                 if (!path.empty()) {
                     Game game;
                     game.path = Utility::baseName(path);
@@ -459,7 +466,7 @@ bool RguiMain::onInput(Input::Player *players) {
             } else if (result == 1) {
                 // remember directory even on cancel
                 m_last_browse_path = m_filebrowser->getCurrentPath();
-                saveBrowsePath(m_last_browse_path);
+                saveBrowsePath(m_last_browse_path, m_last_rom_name);
                 m_screen = SCREEN_MAIN;
                 buildMainMenu();
             }

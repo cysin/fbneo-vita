@@ -1,5 +1,7 @@
 # fbneo-vita
 
+![fbneo-vita](data/vita/romfs/sce_sys/pic0.png)
+
 `fbneo-vita` is a PS Vita frontend built around `FBNeo`.
 
 This repository is Vita-only. It contains:

@@ -27,7 +27,7 @@ public:
     std::string getSelectedPath() const;
     std::string getCurrentPath() const;
 
-    void setPath(const std::string &path);
+    void setPath(const std::string &path, const std::string &selectName = {});
 
 private:
     struct DirectoryState {
@@ -59,6 +59,7 @@ private:
     std::vector<std::string> m_extensions;
     std::vector<c2d::Io::File> m_entries;
     std::string m_selected_file;
+    std::string m_initial_selection;
     std::map<std::string, DirectoryState> m_directory_states;
     std::vector<JumpTarget> m_jump_targets;
     int m_jump_index = 0;

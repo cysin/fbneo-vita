@@ -87,6 +87,7 @@ private:
     RguiTurbo *m_turbo_menu = nullptr;
     c2d::Font *m_rgui_font = nullptr;
     std::string m_last_browse_path;
+    std::string m_last_rom_name;
 };
 
 #endif // FBNEO_VITA_RGUI_MAIN_H

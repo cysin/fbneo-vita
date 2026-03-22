@@ -172,6 +172,18 @@ void RguiFileBrowser::saveCurrentState() {
 }
 
 void RguiFileBrowser::restoreCurrentState() {
+    // Try initial selection first (persisted across sessions)
+    if (!m_initial_selection.empty()) {
+        int idx = getEntryIndexByName(m_initial_selection);
+        m_initial_selection.clear();
+        if (idx >= 0) {
+            int visible = m_menu->getVisibleRowCount();
+            int scrollOffset = std::max(0, idx - visible / 2);
+            m_menu->setSelectionState(idx, scrollOffset);
+            return;
+        }
+    }
+
     auto it = m_directory_states.find(m_current_path);
     if (it == m_directory_states.end()) {
         m_menu->setSelectionState(0, 0);
@@ -417,9 +429,10 @@ std::string RguiFileBrowser::getCurrentPath() const {
     return m_current_path;
 }
 
-void RguiFileBrowser::setPath(const std::string &path) {
+void RguiFileBrowser::setPath(const std::string &path, const std::string &selectName) {
     std::string normalized = normalizeDirectoryPath(path);
     m_current_path = normalized.empty() ? m_root_path : normalized;
+    m_initial_selection = selectName;
     m_quick_jump_active = false;
     refreshList();
 }
