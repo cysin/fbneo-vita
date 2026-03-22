@@ -86,6 +86,8 @@ int FBNeoVitaUiEmu::getSekCpuCore() {
         zipList.emplace_back("kof2002");
         zipList.emplace_back("kf2k3pcb");
         //zipList.push_back("kof2003"); // WORKS
+        zipList.emplace_back("mslug5");
+        zipList.emplace_back("svc"); // SvC Chaos also uses PVC
     }
 
     std::string zip = BurnDrvGetTextA(DRV_NAME);

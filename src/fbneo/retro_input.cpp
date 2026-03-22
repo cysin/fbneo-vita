@@ -392,6 +392,21 @@ static inline int input_cb_wrapper(unsigned port, unsigned device, unsigned inde
 		return input_cb(port, device, index, id);
 }
 
+// Auto-Fire support (from FBNeo upstream inp_interface.cpp)
+static INT32 AF[1000] = { 0, };
+INT32 nAutoFireRate = 6;
+
+static inline INT32 AutofirePick(INT32 buttonOffset)
+{
+	INT32 onTime = nAutoFireRate - ((nAutoFireRate < 4) ? nAutoFireRate : 4);
+	return ((nCurrentFrame - AF[buttonOffset] + onTime) % nAutoFireRate) > onTime;
+}
+
+static inline void AutofireOff(INT32 buttonOffset)
+{
+	AF[buttonOffset] = nCurrentFrame;
+}
+
 // Deadzone when faking digital controls through analog sticks
 #define FAKE_ANALOG_DEADZONE 10000
 
@@ -2984,37 +2999,33 @@ void InputMake(void)
 	}
 
 	#ifdef __CROSS2D__
-	// Turbo fire processing
+	// Turbo fire: use FBNeo AutofirePick() timing to toggle enabled buttons
+	nAutoFireRate = g_turbo.speed * 2;
+	if (nAutoFireRate < 2) nAutoFireRate = 2;
 	{
-		g_turbo_frame_counter++;
-		bool turbo_active = ((g_turbo_frame_counter / g_turbo.speed) % 2) == 0;
+		for (UINT32 ki = 0; ki < MAX_KEYBINDS; ki++) {
+			if (sKeyBinds[ki].device != RETRO_DEVICE_JOYPAD) continue;
 
-		if (!turbo_active) {
-			for (UINT32 ki = 0; ki < MAX_KEYBINDS; ki++) {
-				if (sKeyBinds[ki].device == RETRO_DEVICE_NONE) continue;
-				if (sKeyBinds[ki].device != RETRO_DEVICE_JOYPAD) continue;
+			unsigned port = sKeyBinds[ki].port;
+			unsigned btn_id = sKeyBinds[ki].id;
+			if (port >= TURBO_MAX_PLAYERS) continue;
 
-				unsigned port = sKeyBinds[ki].port;
-				unsigned btn_id = sKeyBinds[ki].id;
-				if (port >= TURBO_MAX_PLAYERS) continue;
-
-				for (int tb = 0; tb < TURBO_MAX_BUTTONS; tb++) {
-					const unsigned mapped_btn_id = GetTurboMappedJoypadId(port, tb);
-					if (g_turbo.enabled[port][tb] && mapped_btn_id != 0 && btn_id == mapped_btn_id) {
-						// ki IS the nCode (keybind index == switch code)
-						for (UINT32 gi = 0; gi < nGameInpCount; gi++) {
-							struct GameInp *pg = &GameInp[gi];
-							if (pg->nInput == GIT_SWITCH &&
-								pg->Input.Switch.nCode == ki &&
-								pg->Input.nVal != 0) {
+			for (int tb = 0; tb < TURBO_MAX_BUTTONS; tb++) {
+				const unsigned mapped_btn_id = GetTurboMappedJoypadId(port, tb);
+				if (g_turbo.enabled[port][tb] && mapped_btn_id != 0 && btn_id == mapped_btn_id) {
+					for (UINT32 gi = 0; gi < nGameInpCount; gi++) {
+						struct GameInp *pg = &GameInp[gi];
+						if (pg->nInput == GIT_SWITCH &&
+							pg->Input.Switch.nCode == ki &&
+							pg->Input.nVal != 0) {
+							if (!AutofirePick(1000 + port * TURBO_MAX_BUTTONS + tb)) {
 								pg->Input.nVal = 0;
-								if (pg->Input.pVal) {
+								if (pg->Input.pVal)
 									*(pg->Input.pVal) = 0;
-								}
 							}
 						}
-						break;
 					}
+					break;
 				}
 			}
 		}
